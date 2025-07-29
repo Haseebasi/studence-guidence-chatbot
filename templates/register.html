@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register Account</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(to bottom right, #00002a 0%, #2a0000 100%); /* Blue from top-left, Red towards bottom-right */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            color: #e0e0e0; /* Default light text color for dark mode */
+        }
+        .register-container {
+            background-color: #1a1a1a; /* Dark background for the form box */
+            border-radius: 1.5rem;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.5);
+            width: 100%;
+            max-width: 28rem; /* Adjusted for a form, slightly smaller than chat */
+            padding: 2.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            border: 1px solid #333;
+        }
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        .form-input {
+            padding: 0.75rem 1rem;
+            background-color: #2a2a2a;
+            border: 1px solid #444;
+            border-radius: 0.75rem;
+            outline: none;
+            font-size: 1rem;
+            color: #e0e0e0;
+            transition: border-color 0.2s;
+        }
+        .form-input:focus {
+            border-color: #8888ff;
+        }
+        .form-button {
+            background-color: #003366; /* Darker blue */
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.1s;
+            border: none;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            width: 100%; /* Full width button */
+        }
+        .form-button:hover {
+            background-color: #004488;
+            transform: translateY(-1px);
+        }
+        .form-button:active {
+            transform: translateY(0);
+        }
+        .message-box {
+            background-color: #333;
+            color: #e0e0e0;
+            padding: 1rem;
+            border-radius: 0.75rem;
+            text-align: center;
+            display: none; /* Hidden by default */
+        }
+    </style>
+</head>
+<body>
+    <div class="register-container">
+        <h2 class="text-3xl font-bold text-center text-white">Register Account</h2>
+        <div id="message-box" class="message-box"></div>
+        <div class="form-group">
+            <label for="username" class="text-gray-300">Username:</label>
+            <input type="text" id="username" class="form-input" placeholder="Choose a username" required>
+        </div>
+        <div class="form-group">
+            <label for="email" class="text-gray-300">Email:</label>
+            <input type="email" id="email" class="form-input" placeholder="Enter your email" required>
+        </div>
+        <div class="form-group">
+            <label for="password" class="text-gray-300">New Password:</label>
+            <input type="password" id="password" class="form-input" placeholder="Create a password" required>
+        </div>
+        <button id="register-button" class="form-button">Register</button>
+        <p class="text-center text-gray-400 text-sm">Already have an account? <a href="/login" class="text-blue-400 hover:underline">Login here</a></p>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const usernameInput = document.getElementById('username');
+            const emailInput = document.getElementById('email');
+            const passwordInput = document.getElementById('password');
+            const registerButton = document.getElementById('register-button');
+            const messageBox = document.getElementById('message-box');
+
+            function showMessage(message, type = 'info') {
+                messageBox.textContent = message;
+                messageBox.style.display = 'block';
+                if (type === 'error') {
+                    messageBox.style.backgroundColor = '#880000'; // Dark red for error
+                } else if (type === 'success') {
+                    messageBox.style.backgroundColor = '#005500'; // Dark green for success
+                } else {
+                    messageBox.style.backgroundColor = '#333'; // Default
+                }
+            }
+
+            registerButton.addEventListener('click', async function() {
+                const username = usernameInput.value.trim();
+                const email = emailInput.value.trim();
+                const password = passwordInput.value.trim();
+
+                if (!username || !email || !password) {
+                    showMessage('Please enter username, email, and password.', 'error');
+                    return;
+                }
+
+                if (password.length < 6) {
+                    showMessage('Password must be at least 6 characters long.', 'error');
+                    return;
+                }
+
+                showMessage('Registering...', 'info');
+
+                try {
+                    const response = await fetch('/register_user', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ username: username, email: email, password: password })
+                    });
+
+                    const data = await response.json();
+
+                    if (response.ok) {
+                        showMessage(data.message || 'Registration successful! Please log in.', 'success');
+                        usernameInput.value = '';
+                        emailInput.value = '';
+                        passwordInput.value = '';
+                    } else {
+                        showMessage(data.message || 'Registration failed. Please try again.', 'error');
+                    }
+                } catch (error) {
+                    console.error('Registration error:', error);
+                    showMessage('An error occurred during registration. Please try again later.', 'error');
+                }
+            });
+        });
+    </script>
+</body>
+</html>

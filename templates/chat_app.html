@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Guidance Chatbot</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            /* Dark mode background with red and blue gradient */
+            background: linear-gradient(to bottom right, #00002a 0%, #2a0000 100%); /* Blue from top-left, Red towards bottom-right */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            color: #e0e0e0; /* Default light text color for dark mode */
+            position: relative; /* Needed for absolute positioning of navbar */
+        }
+        .chat-container {
+            background-color: #1a1a1a; /* Dark background for the chat box */
+            border-radius: 1.5rem; /* More rounded corners */
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.5); /* Stronger, darker shadow for dark mode */
+            width: 100%;
+            max-width: 40rem; /* Increased default max-width for a significantly bigger effect */
+            display: flex;
+            flex-direction: column;
+            overflow: hidden; /* Ensures content inside stays within bounds */
+            border: 1px solid #333; /* Subtle border for definition */
+        }
+        .chat-header {
+            background-color: #3f0000; /* Darker red for header */
+            color: white;
+            padding: 1.5rem;
+            text-align: center;
+            border-top-left-radius: 1.5rem;
+            border-top-right-radius: 1.5rem;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3); /* Shadow for header separation */
+        }
+        .chat-messages {
+            flex-grow: 1; /* Allows messages area to expand */
+            padding: 1.5rem;
+            overflow-y: auto; /* Enables scrolling for messages */
+            max-height: 70vh; /* Limit height to prevent overflow on smaller screens */
+            display: flex;
+            flex-direction: column;
+            gap: 1rem; /* Space between messages */
+            background-color: #1a1a1a; /* Ensure message background is dark */
+        }
+        .message-bubble {
+            max-width: 80%;
+            padding: 0.75rem 1rem;
+            border-radius: 1.25rem; /* Rounded message bubbles */
+            word-wrap: break-word; /* Ensures long words wraps */
+        }
+        .user-message {
+            background-color: #002a4f; /* Dark blue for user messages */
+            align-self: flex-end; /* Align to right */
+            color: #e0e7ff; /* Lighter text for user message */
+        }
+        .bot-message {
+            background-color: #3a0000; /* Dark red for bot messages */
+            align-self: flex-start; /* Align to left */
+            color: #ffe0e0; /* Lighter text for bot message */
+        }
+        .chat-input-area {
+            display: flex;
+            padding: 1.5rem;
+            border-top: 1px solid #333; /* Darker border */
+            gap: 0.75rem; /* Space between input and button */
+            background-color: #1a1a1a; /* Ensure input area background is dark */
+        }
+        .chat-input {
+            flex-grow: 1;
+            padding: 0.75rem 1rem;
+            background-color: #2a2a2a; /* Darker input field background */
+            border: 1px solid #444; /* Darker border */
+            border-radius: 0.75rem; /* Rounded input field */
+            outline: none;
+            font-size: 1rem;
+            color: #e0e0e0; /* Light text color for input */
+            transition: border-color 0.2s;
+        }
+        .chat-input:focus {
+            border-color: #8888ff; /* Lighter blue on focus */
+        }
+        .send-button {
+            background-color: #003366; /* Darker blue for send button */
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.1s;
+            border: none;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        }
+        .send-button:hover {
+            background-color: #004488; /* Slightly lighter blue on hover */
+            transform: translateY(-1px); /* Slight lift effect */
+        }
+        .send-button:active {
+            transform: translateY(0); /* Press down effect */
+        }
+
+        /* Styling for links within messages */
+        .message-bubble a {
+            color: #88aaff; /* Lighter blue for links in dark mode */
+            text-decoration: underline;
+        }
+
+        /* Responsive adjustments */
+        @media (min-width: 640px) { /* sm breakpoint */
+            .chat-container {
+                max-width: 44rem;
+            }
+        }
+        @media (min-width: 768px) { /* md breakpoint */
+            .chat-container {
+                max-width: 50rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="absolute top-0 left-0 right-0 p-4 flex justify-between items-center bg-transparent z-10">
+        <div class="text-white text-2xl font-bold">SGC</div>
+        <a href="/profile" class="profile-link flex items-center justify-center w-10 h-10 bg-gray-700 rounded-full shadow-lg hover:bg-gray-600 transition-colors duration-200">
+            <!-- Simple SVG for a person icon (Lucide user icon equivalent) -->
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-white">
+                <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+            </svg>
+        </a>
+    </nav>
+
+    <div class="chat-container">
+        <div class="chat-header">
+            <h1 class="text-2xl font-bold">Student Guidance Chatbot</h1>
+        </div>
+        <div id="chat-messages" class="chat-messages">
+            <!-- Initial greeting message will be dynamically updated by JavaScript -->
+            <div id="initial-greeting" class="message-bubble bot-message">Loading greeting...</div>
+        </div>
+        <div class="chat-input-area">
+            <input type="text" id="user-input" class="chat-input" placeholder="Ask about your career...">
+            <button id="send-button" class="send-button">Send</button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', async function() {
+            const userInput = document.getElementById('user-input');
+            const sendButton = document.getElementById('send-button');
+            const chatMessages = document.getElementById('chat-messages');
+            const initialGreetingDiv = document.getElementById('initial-greeting'); // Get the initial greeting div
+
+            // Function to add a message to the chat display
+            function addMessage(message, sender) {
+                const messageDiv = document.createElement('div');
+                messageDiv.classList.add('message-bubble');
+                if (sender === 'user') {
+                    messageDiv.classList.add('user-message');
+                } else {
+                    messageDiv.classList.add('bot-message');
+                }
+                // Convert Markdown-like bold (**text**) and links ([text](url)) to HTML
+                let formattedMessage = message.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+                formattedMessage = formattedMessage.replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>'); // Added rel="noopener noreferrer" for security
+                
+                // Replace newline characters (\n) with HTML line breaks (<br>)
+                formattedMessage = formattedMessage.replace(/\n/g, '<br>');
+
+                messageDiv.innerHTML = formattedMessage;
+                chatMessages.appendChild(messageDiv);
+                chatMessages.scrollTop = chatMessages.scrollHeight; // Auto-scroll to bottom
+            }
+
+            // Function to fetch username and update initial greeting
+            async function updateInitialGreeting() {
+                try {
+                    const response = await fetch(`${window.location.origin}/get_user_profile`);
+                    if (response.ok) {
+                        const data = await response.json();
+                        const username = data.username || 'there'; // Default to 'there' if username not found
+                        // Updated greeting message here:
+                        initialGreetingDiv.textContent = `Hello ${username}! I'm a student guidance chatbot. Are you looking for tech-based job opportunities or upskilling roadmaps?`;
+                    } else if (response.status === 401) {
+                        // Not authenticated, redirect to login (though app.py's @before_request should handle this first)
+                        window.location.href = '/login';
+                    } else {
+                        console.error('Failed to fetch user profile for greeting:', response.statusText);
+                        initialGreetingDiv.textContent = `Hello there! I'm a student guidance chatbot. Are you looking for tech-based job opportunities or upskilling roadmaps?`;
+                    }
+                } catch (error) {
+                    console.error('Network error fetching user profile for greeting:', error);
+                    initialGreetingDiv.textContent = `Hello there! I'm a student guidance chatbot. Are you looking for tech-based job opportunities or upskilling roadmaps?`;
+                }
+            }
+
+            // Call the function to update the greeting on page load
+            updateInitialGreeting();
+
+            // Function to send message to Flask backend
+            async function sendMessage() {
+                const message = userInput.value.trim();
+                if (message === '') return;
+
+                addMessage(message, 'user');
+                userInput.value = ''; // Clear input field
+
+                try {
+                    const response = await fetch(`${window.location.origin}/chat`, { // Use absolute URL
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ message: message })
+                    });
+                    const data = await response.json();
+                    addMessage(data.reply, 'bot');
+                } catch (error) {
+                    console.error('Error sending message:', error);
+                    addMessage("Oops! Something went wrong. Please try again.", 'bot');
+                }
+            }
+
+            // Event listeners
+            sendButton.addEventListener('click', sendMessage);
+            userInput.addEventListener('keypress', function(event) {
+                if (event.key === 'Enter') {
+                    sendMessage();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
