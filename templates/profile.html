@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Profile</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(to bottom right, #00002a 0%, #2a0000 100%); /* Blue from top-left, Red towards bottom-right */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            color: #e0e0e0; /* Default light text color for dark mode */
+            position: relative; /* Needed for absolute positioning of navbar */
+        }
+        .profile-container {
+            background-color: #1a1a1a; /* Dark background for the profile box */
+            border-radius: 1.5rem;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.5);
+            width: 100%;
+            max-width: 32rem; /* Consistent size for content pages */
+            padding: 2.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            border: 1px solid #333;
+            text-align: center;
+        }
+        .profile-picture {
+            width: 8rem;
+            height: 8rem;
+            border-radius: 50%;
+            background-color: #003366; /* Dark blue placeholder */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0 auto 1.5rem auto; /* Center and add margin below */
+            border: 3px solid #004488; /* Border around profile pic */
+            overflow: hidden; /* Ensure image stays within bounds */
+        }
+        .profile-picture svg {
+            color: white;
+            width: 4rem;
+            height: 4rem;
+        }
+        .profile-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            text-align: left; /* Align text left within info block */
+        }
+        .profile-info div {
+            background-color: #2a2a2a;
+            padding: 0.75rem 1rem;
+            border-radius: 0.75rem;
+            border: 1px solid #444;
+            display: flex;
+            justify-content: space-between; /* Space out label and value */
+            align-items: center;
+        }
+        .profile-info label {
+            font-weight: 600;
+            color: #a0a0a0; /* Slightly lighter gray for labels */
+        }
+        .profile-info span {
+            color: #e0e0e0;
+        }
+        .action-button { /* General class for buttons */
+            background-color: #3a0000; /* Darker red for back button */
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.1s;
+            border: none;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            width: 100%; /* Full width button */
+            margin-top: 1rem;
+        }
+        .action-button:hover {
+            background-color: #4f0000;
+            transform: translateY(-1px);
+        }
+        .action-button:active {
+            transform: translateY(0);
+        }
+        .logout-button { /* Specific style for logout button */
+            background-color: #880000; /* More prominent red for logout */
+        }
+        .logout-button:hover {
+            background-color: #aa0000;
+        }
+
+        /* Responsive adjustments */
+        @media (min-width: 640px) { /* sm breakpoint */
+            .profile-container {
+                max-width: 36rem;
+            }
+        }
+        @media (min-width: 768px) { /* md breakpoint */
+            .profile-container {
+                max-width: 40rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="profile-container">
+        <h2 class="text-3xl font-bold text-center text-white">User Profile</h2>
+        <div class="profile-picture">
+            <!-- SVG for a larger person icon -->
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-white">
+                <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+            </svg>
+        </div>
+        <div class="profile-info">
+            <div>
+                <label>Username:</label>
+                <span id="profile-username">Loading...</span>
+            </div>
+            <div>
+                <label>Email:</label>
+                <span id="profile-email">Loading...</span>
+            </div>
+            <div>
+                <label>Member Since:</label>
+                <span id="profile-member-since">Loading...</span>
+            </div>
+            <div>
+                <label>Account Type:</label>
+                <span id="profile-account-type">Loading...</span>
+            </div>
+        </div>
+        <button id="back-to-chat-button" class="action-button">Back to Chatbot</button>
+        <button id="logout-button" class="action-button logout-button">Logout</button>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', async function() {
+            const backButton = document.getElementById('back-to-chat-button');
+            const logoutButton = document.getElementById('logout-button');
+            const profileUsername = document.getElementById('profile-username');
+            const profileEmail = document.getElementById('profile-email');
+            const profileMemberSince = document.getElementById('profile-member-since');
+            const profileAccountType = document.getElementById('profile-account-type');
+
+            // Function to fetch user profile data
+            async function fetchUserProfile() {
+                try {
+                    const response = await fetch(`${window.location.origin}/get_user_profile`);
+                    if (response.ok) {
+                        const data = await response.json();
+                        profileUsername.textContent = data.username;
+                        profileEmail.textContent = data.email;
+                        profileMemberSince.textContent = data.member_since;
+                        profileAccountType.textContent = data.account_type;
+                    } else if (response.status === 401) {
+                        // Not authenticated, redirect to login
+                        window.location.href = '/login';
+                    } else {
+                        console.error('Failed to fetch profile:', response.statusText);
+                        // Display a user-friendly error message
+                        profileUsername.textContent = 'Failed to load profile';
+                        profileEmail.textContent = 'Failed to load profile';
+                        profileMemberSince.textContent = 'Failed to load profile';
+                        profileAccountType.textContent = 'Failed to load profile';
+                    }
+                } catch (error) {
+                    console.error('Error fetching profile:', error);
+                    // Display a user-friendly error message for network/other issues
+                    profileUsername.textContent = 'Network Error';
+                    profileEmail.textContent = 'Network Error';
+                    profileMemberSince.textContent = 'Network Error';
+                    profileAccountType.textContent = 'Network Error';
+                }
+            }
+
+            // Fetch profile data on page load
+            fetchUserProfile();
+
+            backButton.addEventListener('click', function() {
+                window.location.href = '/chat_app'; // Redirects to the main chatbot page
+            });
+
+            logoutButton.addEventListener('click', async function() {
+                try {
+                    const response = await fetch(`${window.location.origin}/logout_user`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                    });
+                    if (response.ok) {
+                        window.location.href = '/login'; // Redirect to login after logout
+                    } else {
+                        alert('Logout failed. Please try again.'); // Using alert for simplicity, replace with custom modal
+                    }
+                } catch (error) {
+                    console.error('Logout error:', error);
+                    alert('An error occurred during logout. Please try again.'); // Using alert for simplicity
+                }
+            });
+        });
+    </script>
+</body>
+</html>
